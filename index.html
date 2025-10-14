@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Divisor Avançado de Texto - Visual</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px;
+    }
+    textarea, input, button {
+        width: 100%;
+        max-width: 700px;
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    button {
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        transition: background-color 0.3s;
+    }
+    button:hover { background-color: #45a049; }
+    table {
+        margin: 20px auto;
+        border-collapse: collapse;
+        width: 95%;
+        max-width: 800px;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .copy-btn {
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+    .copy-btn:hover {
+        background-color: #0b7dda;
+    }
+    .part {
+        border-radius: 6px;
+        padding: 5px;
+        margin-bottom: 5px;
+    }
+    #preview {
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    @media (max-width: 600px) {
+        table, th, td { font-size: 12px; }
+    }
+</style>
+</head>
+<body>
+
+<h2>Divisor Avançado de Texto</h2>
+<p>Divida textos grandes sem cortar palavras, visualize estatísticas e exporte todas as partes em .txt</p>
+
+<textarea id="texto" rows="6" placeholder="Cole seu texto aqui..."></textarea>
+
+<label for="numCaracteres">Número máximo de caracteres por parte:</label>
+<input type="number" id="numCaracteres" value="7000" min="1">
+
+<div id="preview">Número de partes previstas: 0</div>
+
+<button onclick="dividirTexto()">Dividir texto</button>
+<button onclick="exportarTexto()">Exportar todas as partes (.txt)</button>
+
+<table id="resultado">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Texto</th>
+            <th>Caracteres / Palavras</th>
+            <th>Copiar</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+let partes = [];
+
+function gerarCor(index) {
+    const cores = ['#FFCDD2','#C8E6C9','#BBDEFB','#FFF9C4','#D1C4E9','#B2DFDB','#FFECB3','#F0F4C3'];
+    return cores[index % cores.length];
+}
+
+function dividirTexto() {
+    const texto = document.getElementById('texto').value.trim();
+    const tamanho = parseInt(document.getElementById('numCaracteres').value);
+    const tbody = document.querySelector('#resultado tbody');
+    const preview = document.getElementById('preview');
+    tbody.innerHTML = '';
+    partes = [];
+
+    if (!texto || tamanho <= 0) return alert('Insira um texto e um número válido!');
+
+    let start = 0;
+    while (start < texto.length) {
+        let end = start + tamanho;
+        if (end >= texto.length) {
+            partes.push(texto.slice(start));
+            break;
+        }
+        let slice = texto.slice(start, end);
+        let lastSpace = slice.lastIndexOf(' ');
+        if (lastSpace === -1) lastSpace = tamanho;
+        partes.push(texto.slice(start, start + lastSpace));
+        start += lastSpace + 1;
+    }
+
+    preview.textContent = `Número de partes previstas: ${partes.length}`;
+
+    partes.forEach((parte, index) => {
+        const tr = document.createElement('tr');
+        tr.style.backgroundColor = gerarCor(index);
+
+        const tdNum = document.createElement('td');
+        tdNum.textContent = index + 1;
+        tr.appendChild(tdNum);
+
+        const tdTexto = document.createElement('td');
+        tdTexto.textContent = parte;
+        tr.appendChild(tdTexto);
+
+        const tdStats = document.createElement('td');
+        tdStats.textContent = `${parte.length} caracteres / ${parte.split(/\s+/).length} palavras`;
+        tr.appendChild(tdStats);
+
+        const tdBotao = document.createElement('td');
+        const btn = document.createElement('button');
+        btn.textContent = 'Copiar';
+        btn.className = 'copy-btn';
+        btn.onclick = () => {
+            navigator.clipboard.writeText(parte);
+            alert('Texto copiado!');
+        };
+        tdBotao.appendChild(btn);
+        tr.appendChild(tdBotao);
+
+        tbody.appendChild(tr);
+    });
+}
+
+function exportarTexto() {
+    if (!partes.length) return alert('Divida o texto primeiro!');
+    const blob = new Blob([partes.join('\n\n')], {type: 'text/plain;charset=utf-8'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'texto_dividido.txt';
+    link.click();
+}
+</script>
+
+</body>
+</html>
